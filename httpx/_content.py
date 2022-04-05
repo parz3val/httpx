@@ -53,15 +53,11 @@ class IteratorByteStream(SyncByteStream):
         if hasattr(self._stream, "read") and not isinstance(
             self._stream, SyncByteStream
         ):
-            # File-like interfaces should use 'read' directly.
-            chunk = self._stream.read(self.CHUNK_SIZE)  # type: ignore
-            while chunk:
+            while chunk := self._stream.read(self.CHUNK_SIZE):
                 yield chunk
-                chunk = self._stream.read(self.CHUNK_SIZE)  # type: ignore
         else:
             # Otherwise iterate.
-            for part in self._stream:
-                yield part
+            yield from self._stream
 
 
 class AsyncIteratorByteStream(AsyncByteStream):
@@ -103,7 +99,6 @@ class UnattachedStream(AsyncByteStream, SyncByteStream):
 
     async def __aiter__(self) -> AsyncIterator[bytes]:
         raise StreamClosed()
-        yield b""  # pragma: nocover
 
 
 def encode_content(

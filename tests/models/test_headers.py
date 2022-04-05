@@ -36,7 +36,7 @@ def test_headers():
 
 def test_header_mutations():
     h = httpx.Headers()
-    assert dict(h) == {}
+    assert not dict(h)
     h["a"] = "1"
     assert dict(h) == {"a": "1"}
     h["a"] = "2"
@@ -84,7 +84,7 @@ def test_headers_insert_removes_all_existing():
 def test_headers_delete_removes_all_existing():
     headers = httpx.Headers([("a", "123"), ("a", "456")])
     del headers["a"]
-    assert dict(headers) == {}
+    assert not dict(headers)
 
 
 def test_headers_dict_repr():

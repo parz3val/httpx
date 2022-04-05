@@ -12,16 +12,14 @@ def test_httpcore_all_exceptions_mapped() -> None:
     All exception classes exposed by HTTPCore are properly mapped to an HTTPX-specific
     exception class.
     """
-    not_mapped = [
+    if not_mapped := [
         value
         for name, value in vars(httpcore).items()
         if isinstance(value, type)
         and issubclass(value, Exception)
         and value not in HTTPCORE_EXC_MAP
         and value is not httpcore.ConnectionNotAvailable
-    ]
-
-    if not_mapped:  # pragma: nocover
+    ]:
         pytest.fail(f"Unmapped httpcore exceptions: {not_mapped}")
 
 
@@ -62,15 +60,13 @@ def test_httpx_exceptions_exposed() -> None:
     are exposed as public API.
     """
 
-    not_exposed = [
+    if not_exposed := [
         value
         for name, value in vars(httpx._exceptions).items()
         if isinstance(value, type)
         and issubclass(value, Exception)
         and not hasattr(httpx, name)
-    ]
-
-    if not_exposed:  # pragma: nocover
+    ]:
         pytest.fail(f"Unexposed HTTPX exceptions: {not_exposed}")
 
 

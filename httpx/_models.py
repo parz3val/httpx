@@ -211,13 +211,11 @@ class Headers(typing.MutableMapping[str, str]):
         """
         normalized_key = key.lower().encode(self.encoding)
 
-        items = [
+        if items := [
             header_value.decode(self.encoding)
             for _, header_key, header_value in self._list
             if header_key == normalized_key
-        ]
-
-        if items:
+        ]:
             return ", ".join(items)
 
         raise KeyError(key)
@@ -549,12 +547,11 @@ class Response:
     @property
     def text(self) -> str:
         if not hasattr(self, "_text"):
-            content = self.content
-            if not content:
-                self._text = ""
-            else:
+            if content := self.content:
                 decoder = TextDecoder(encoding=self.encoding or "utf-8")
                 self._text = "".join([decoder.decode(self.content), decoder.flush()])
+            else:
+                self._text = ""
         return self._text
 
     @property
@@ -811,13 +808,10 @@ class Response:
             with request_context(request=self._request):
                 for raw_bytes in self.iter_raw():
                     decoded = decoder.decode(raw_bytes)
-                    for chunk in chunker.decode(decoded):
-                        yield chunk
+                    yield from chunker.decode(decoded)
                 decoded = decoder.flush()
-                for chunk in chunker.decode(decoded):
-                    yield chunk  # pragma: nocover
-                for chunk in chunker.flush():
-                    yield chunk
+                yield from chunker.decode(decoded)
+                yield from chunker.flush()
 
     def iter_text(self, chunk_size: int = None) -> typing.Iterator[str]:
         """
@@ -830,22 +824,17 @@ class Response:
         with request_context(request=self._request):
             for byte_content in self.iter_bytes():
                 text_content = decoder.decode(byte_content)
-                for chunk in chunker.decode(text_content):
-                    yield chunk
+                yield from chunker.decode(text_content)
             text_content = decoder.flush()
-            for chunk in chunker.decode(text_content):
-                yield chunk
-            for chunk in chunker.flush():
-                yield chunk
+            yield from chunker.decode(text_content)
+            yield from chunker.flush()
 
     def iter_lines(self) -> typing.Iterator[str]:
         decoder = LineDecoder()
         with request_context(request=self._request):
             for text in self.iter_text():
-                for line in decoder.decode(text):
-                    yield line
-            for line in decoder.flush():
-                yield line
+                yield from decoder.decode(text)
+            yield from decoder.flush()
 
     def iter_raw(self, chunk_size: int = None) -> typing.Iterator[bytes]:
         """
@@ -865,12 +854,8 @@ class Response:
         with request_context(request=self._request):
             for raw_stream_bytes in self.stream:
                 self._num_bytes_downloaded += len(raw_stream_bytes)
-                for chunk in chunker.decode(raw_stream_bytes):
-                    yield chunk
-
-        for chunk in chunker.flush():
-            yield chunk
-
+                yield from chunker.decode(raw_stream_bytes)
+        yield from chunker.flush()
         self.close()
 
     def close(self) -> None:
@@ -1058,13 +1043,15 @@ class Cookies(MutableMapping):
         """
         value = None
         for cookie in self.jar:
-            if cookie.name == name:
-                if domain is None or cookie.domain == domain:
-                    if path is None or cookie.path == path:
-                        if value is not None:
-                            message = f"Multiple cookies exist with name={name}"
-                            raise CookieConflict(message)
-                        value = cookie.value
+            if (
+                cookie.name == name
+                and (domain is None or cookie.domain == domain)
+                and (path is None or cookie.path == path)
+            ):
+                if value is not None:
+                    message = f"Multiple cookies exist with name={name}"
+                    raise CookieConflict(message)
+                value = cookie.value
 
         if value is None:
             return default

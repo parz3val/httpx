@@ -311,7 +311,7 @@ class URL:
         """
         path = self._uri_reference.path or "/"
         if self._uri_reference.query is not None:
-            path += "?" + self._uri_reference.query
+            path += f"?{self._uri_reference.query}"
         return path.encode("ascii")
 
     @property
@@ -463,7 +463,7 @@ class URL:
                 # than `kwargs["query"] = ""`, so that generated URLs do not
                 # include an empty trailing "?".
                 params = kwargs.pop("params")
-                kwargs["query"] = None if not params else str(QueryParams(params))
+                kwargs["query"] = str(QueryParams(params)) if params else None
 
         # Step 4
         # ======
@@ -651,9 +651,7 @@ class QueryParams(typing.Mapping[str, str]):
         q = httpx.QueryParams("a=123&a=456&b=789")
         assert q.get("a") == "123"
         """
-        if key in self._dict:
-            return self._dict[str(key)][0]
-        return default
+        return self._dict[str(key)][0] if key in self._dict else default
 
     def get_list(self, key: str) -> typing.List[str]:
         """
@@ -664,7 +662,7 @@ class QueryParams(typing.Mapping[str, str]):
         q = httpx.QueryParams("a=123&a=456&b=789")
         assert q.get_list("a") == ["123", "456"]
         """
-        return list(self._dict.get(str(key), []))
+        return list(self._dict.get(key, []))
 
     def set(self, key: str, value: typing.Any = None) -> "QueryParams":
         """
@@ -678,7 +676,7 @@ class QueryParams(typing.Mapping[str, str]):
         """
         q = QueryParams()
         q._dict = dict(self._dict)
-        q._dict[str(key)] = [primitive_value_to_str(value)]
+        q._dict[key] = [primitive_value_to_str(value)]
         return q
 
     def add(self, key: str, value: typing.Any = None) -> "QueryParams":
@@ -693,7 +691,7 @@ class QueryParams(typing.Mapping[str, str]):
         """
         q = QueryParams()
         q._dict = dict(self._dict)
-        q._dict[str(key)] = q.get_list(key) + [primitive_value_to_str(value)]
+        q._dict[key] = q.get_list(key) + [primitive_value_to_str(value)]
         return q
 
     def remove(self, key: str) -> "QueryParams":
@@ -708,7 +706,7 @@ class QueryParams(typing.Mapping[str, str]):
         """
         q = QueryParams()
         q._dict = dict(self._dict)
-        q._dict.pop(str(key), None)
+        q._dict.pop(key, None)
         return q
 
     def merge(self, params: QueryParamTypes = None) -> "QueryParams":
@@ -748,9 +746,11 @@ class QueryParams(typing.Mapping[str, str]):
         return hash(str(self))
 
     def __eq__(self, other: typing.Any) -> bool:
-        if not isinstance(other, self.__class__):
-            return False
-        return sorted(self.multi_items()) == sorted(other.multi_items())
+        return (
+            sorted(self.multi_items()) == sorted(other.multi_items())
+            if isinstance(other, self.__class__)
+            else False
+        )
 
     def __str__(self) -> str:
         return urlencode(self.multi_items())

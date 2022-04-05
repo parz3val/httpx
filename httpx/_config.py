@@ -115,9 +115,9 @@ class SSLConfig:
             ca_bundle_path = Path(self.verify)
         else:
             raise IOError(
-                "Could not find a suitable TLS CA certificate bundle, "
-                "invalid path: {}".format(self.verify)
+                f"Could not find a suitable TLS CA certificate bundle, invalid path: {self.verify}"
             )
+
 
         context = self._create_default_ssl_context()
         context.verify_mode = ssl.CERT_REQUIRED

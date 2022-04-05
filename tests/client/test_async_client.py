@@ -346,7 +346,6 @@ async def test_cancellation_during_stream():
             async def __aiter__(self) -> typing.AsyncIterator[bytes]:
                 yield b"Hello"
                 raise KeyboardInterrupt()
-                yield b", world"  # pragma: nocover
 
             async def aclose(self) -> None:
                 nonlocal stream_was_closed

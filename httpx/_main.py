@@ -162,8 +162,7 @@ def print_response_headers(
 
 def print_response(response: Response) -> None:
     console = rich.console.Console()
-    lexer_name = get_lexer_for_response(response)
-    if lexer_name:
+    if lexer_name := get_lexer_for_response(response):
         if lexer_name.lower() == "json":
             try:
                 data = response.json()
@@ -186,8 +185,7 @@ def format_certificate(cert: dict) -> str:  # pragma: nocover
             lines.append(f"*   {key}:")
             for item in value:
                 if key in ("subject", "issuer"):
-                    for sub_item in item:
-                        lines.append(f"*     {sub_item[0]}: {sub_item[1]!r}")
+                    lines.extend(f"*     {sub_item[0]}: {sub_item[1]!r}" for sub_item in item)
                 elif isinstance(item, tuple) and len(item) == 2:
                     lines.append(f"*     {item[0]}: {item[1]!r}")
                 else:

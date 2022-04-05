@@ -94,7 +94,7 @@ class FileField:
                 # all 4 parameters included
                 filename, fileobj, content_type, headers = value  # type: ignore
         else:
-            filename = Path(str(getattr(value, "name", "upload"))).name
+            filename = Path(getattr(value, "name", "upload")).name
             fileobj = value
 
         if content_type is None:
@@ -160,10 +160,8 @@ class FileField:
         if hasattr(self.file, "seek"):
             self.file.seek(0)
 
-        chunk = self.file.read(self.CHUNK_SIZE)
-        while chunk:
+        while chunk := self.file.read(self.CHUNK_SIZE):
             yield to_bytes(chunk)
-            chunk = self.file.read(self.CHUNK_SIZE)
 
     def render(self) -> typing.Iterator[bytes]:
         yield self.render_headers()
@@ -226,8 +224,7 @@ class MultipartStream(SyncByteStream, AsyncByteStream):
         return {"Content-Length": content_length, "Content-Type": content_type}
 
     def __iter__(self) -> typing.Iterator[bytes]:
-        for chunk in self.iter_chunks():
-            yield chunk
+        yield from self.iter_chunks()
 
     async def __aiter__(self) -> typing.AsyncIterator[bytes]:
         for chunk in self.iter_chunks():

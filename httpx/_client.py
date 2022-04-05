@@ -120,8 +120,7 @@ class BoundSyncStream(SyncByteStream):
         self._timer = timer
 
     def __iter__(self) -> typing.Iterator[bytes]:
-        for chunk in self._stream:
-            yield chunk
+        yield from self._stream
 
     def close(self) -> None:
         seconds = self._timer.sync_elapsed()
@@ -559,10 +558,7 @@ class BaseClient:
         """
         Return the body that should be used for the redirect request.
         """
-        if method != request.method and method == "GET":
-            return None
-
-        return request.stream
+        return None if method != request.method and method == "GET" else request.stream
 
 
 class Client(BaseClient):
@@ -741,11 +737,14 @@ class Client(BaseClient):
         Returns the transport instance that should be used for a given URL.
         This will either be the standard connection pool, or a proxy.
         """
-        for pattern, transport in self._mounts.items():
-            if pattern.matches(url):
-                return self._transport if transport is None else transport
-
-        return self._transport
+        return next(
+            (
+                self._transport if transport is None else transport
+                for pattern, transport in self._mounts.items()
+                if pattern.matches(url)
+            ),
+            self._transport,
+        )
 
     def request(
         self,
@@ -1453,11 +1452,14 @@ class AsyncClient(BaseClient):
         Returns the transport instance that should be used for a given URL.
         This will either be the standard connection pool, or a proxy.
         """
-        for pattern, transport in self._mounts.items():
-            if pattern.matches(url):
-                return self._transport if transport is None else transport
-
-        return self._transport
+        return next(
+            (
+                self._transport if transport is None else transport
+                for pattern, transport in self._mounts.items()
+                if pattern.matches(url)
+            ),
+            self._transport,
+        )
 
     async def request(
         self,

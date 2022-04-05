@@ -10,10 +10,7 @@ from .base import BaseTransport
 
 def _skip_leading_empty_chunks(body: typing.Iterable) -> typing.Iterable:
     body = iter(body)
-    for chunk in body:
-        if chunk:
-            return itertools.chain([chunk], body)
-    return []
+    return next((itertools.chain([chunk], body) for chunk in body if chunk), [])
 
 
 class WSGIByteStream(SyncByteStream):
@@ -22,8 +19,7 @@ class WSGIByteStream(SyncByteStream):
         self._result = _skip_leading_empty_chunks(result)
 
     def __iter__(self) -> typing.Iterator[bytes]:
-        for part in self._result:
-            yield part
+        yield from self._result
 
     def close(self) -> None:
         if self._close is not None:

@@ -7,7 +7,7 @@ def test_all_imports_are_exported() -> None:
     assert exported_members == sorted(
         (
             member
-            for member in vars(httpx).keys()
+            for member in vars(httpx)
             if not member.startswith("_") or member in included_private_members
         ),
         key=str.casefold,

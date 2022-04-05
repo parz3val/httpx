@@ -12,7 +12,7 @@ def get_version(package):
     Return package version as listed in `__version__` in `init.py`.
     """
     version = Path(package, "__version__.py").read_text()
-    return re.search("__version__ = ['\"]([^'\"]+)['\"]", version).group(1)
+    return re.search("__version__ = ['\"]([^'\"]+)['\"]", version)[1]
 
 
 def get_long_description():

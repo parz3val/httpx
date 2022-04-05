@@ -18,12 +18,12 @@ if typing.TYPE_CHECKING:  # pragma: no cover
     from ._models import URL
 
 
-_HTML5_FORM_ENCODING_REPLACEMENTS = {'"': "%22", "\\": "\\\\"}
-_HTML5_FORM_ENCODING_REPLACEMENTS.update(
-    {chr(c): "%{:02X}".format(c) for c in range(0x1F + 1) if c != 0x1B}
-)
+_HTML5_FORM_ENCODING_REPLACEMENTS = {'"': "%22", "\\": "\\\\"} | {
+    chr(c): "%{:02X}".format(c) for c in range(0x1F + 1) if c != 0x1B
+}
+
 _HTML5_FORM_ENCODING_RE = re.compile(
-    r"|".join([re.escape(c) for c in _HTML5_FORM_ENCODING_REPLACEMENTS.keys()])
+    r"|".join([re.escape(c) for c in _HTML5_FORM_ENCODING_REPLACEMENTS])
 )
 
 
@@ -49,9 +49,7 @@ def normalize_header_value(
     """
     Coerce str/bytes into a strictly byte-wise HTTP header value.
     """
-    if isinstance(value, bytes):
-        return value
-    return value.encode(encoding or "ascii")
+    return value if isinstance(value, bytes) else value.encode(encoding or "ascii")
 
 
 def primitive_value_to_str(value: "PrimitiveData") -> str:
@@ -119,13 +117,11 @@ def guess_json_utf(data: bytes) -> typing.Optional[str]:
             return "utf-16-be"
         if sample[1::2] == _null2:  # 2nd and 4th are null
             return "utf-16-le"
-        # Did not detect 2 valid UTF-16 ascii-range characters
-    if nullcount == 3:
+    elif nullcount == 3:
         if sample[:3] == _null3:
             return "utf-32-be"
         if sample[1:] == _null3:
             return "utf-32-le"
-        # Did not detect a valid UTF-32 ascii-range character
     return None
 
 

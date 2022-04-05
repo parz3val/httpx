@@ -66,10 +66,9 @@ class DigestApp:
             "stale": "FALSE",
         }
         challenge_str = ", ".join(
-            '{}="{}"'.format(key, value)
-            for key, value in challenge_data.items()
-            if value
+            f'{key}="{value}"' for key, value in challenge_data.items() if value
         )
+
 
         headers = {
             "www-authenticate": f'Digest realm="httpx@example.org", {challenge_str}',

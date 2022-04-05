@@ -52,7 +52,7 @@ def test_queryparams(source):
 
 def test_queryparam_types():
     q = httpx.QueryParams(None)
-    assert str(q) == ""
+    assert not str(q)
 
     q = httpx.QueryParams({"a": True})
     assert str(q) == "a=true"

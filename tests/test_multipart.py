@@ -38,7 +38,7 @@ def test_multipart(value, output):
 
     # Note that the expected return type for text fields
     # appears to differs from 3.6 to 3.7+
-    assert multipart["text"] == [output.decode()] or multipart["text"] == [output]
+    assert multipart["text"] in [[output.decode()], [output]]
     assert multipart["file"] == [b"<file content>"]
 
 
@@ -91,7 +91,7 @@ def test_multipart_file_tuple():
 
     # Note that the expected return type for text fields
     # appears to differs from 3.6 to 3.7+
-    assert multipart["text"] == ["abc"] or multipart["text"] == [b"abc"]
+    assert multipart["text"] in [["abc"], [b"abc"]]
     assert multipart["file"] == [b"<file content>"]
 
 

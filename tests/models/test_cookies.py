@@ -11,13 +11,13 @@ def test_cookies():
     assert "name" in cookies
     assert len(cookies) == 1
     assert dict(cookies) == {"name": "value"}
-    assert bool(cookies) is True
+    assert bool(cookies)
 
     del cookies["name"]
     assert "name" not in cookies
     assert len(cookies) == 0
-    assert dict(cookies) == {}
-    assert bool(cookies) is False
+    assert not dict(cookies)
+    assert not bool(cookies)
 
 
 def test_cookies_update():
